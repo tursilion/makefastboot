@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "makefastboot", "makefastboot\makefastboot.vcproj", "{30A1BC6A-A111-415B-B94F-C608B76A6949}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "jagcrypt", "jagcrypt\jagcrypt.vcproj", "{53684165-6C90-46B3-AA2D-06C8411634B5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{30A1BC6A-A111-415B-B94F-C608B76A6949}.Debug|Win32.ActiveCfg = Debug|Win32
+		{30A1BC6A-A111-415B-B94F-C608B76A6949}.Debug|Win32.Build.0 = Debug|Win32
+		{30A1BC6A-A111-415B-B94F-C608B76A6949}.Release|Win32.ActiveCfg = Release|Win32
+		{30A1BC6A-A111-415B-B94F-C608B76A6949}.Release|Win32.Build.0 = Release|Win32
+		{53684165-6C90-46B3-AA2D-06C8411634B5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{53684165-6C90-46B3-AA2D-06C8411634B5}.Debug|Win32.Build.0 = Debug|Win32
+		{53684165-6C90-46B3-AA2D-06C8411634B5}.Release|Win32.ActiveCfg = Release|Win32
+		{53684165-6C90-46B3-AA2D-06C8411634B5}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
