@@ -1,0 +1,140 @@
+
+                                        bootcode.s           Page 1       2:37:04 am 17-Sep-2016        SMAC 1.0.06 (Win32)
+
+
+    1                                   ; Jaguar cart encrypted boot.
+    2                                   ; Want to try and keep this under 130 bytes total, so it fits in two blocks
+    3                                   ; We need to deal with two entry points, one for Console and one for CD.
+    4                                   ; This uses my custom version of the encryption tool that doesn't overwrite
+    5                                   ; huge blocks, so the only patches we need to watch out for are the CD's.
+    6                                   ; this frees up a TON of space for code. :) (Almost the full 130 bytes).
+    7                                   
+    8                                   .gpu
+    9                                    .org $00F035AC
+   10                                   
+   11                                   ; entry point for console (CD will jump here from below)
+   12                                   
+   13                                   ; before we unlock the system, do a quick checksum of the cart
+   14                                   ; unlike the official code, we take the data for the checksome
+   15                                   ; from unencrypted memory after the boot vector:
+   16                                   ;
+   17                                   ; 0x400 - boot cart width (original)
+   18                                   ; 0x404 - boot cart address (original)
+   19                                   ; 0x408 - flags (original)
+   20                                   ; 0x410 - start address to sum
+   21                                   ; 0x414 - number of 32-bit words to sum
+   22                                   ; 0x418 - 32-bit checksum + 0x03D0DEAD (this is important! that's the wakeup value!)
+   23                                   ;
+   24                                   ; By adding the key to the checksum, and subtracting as we go through
+   25                                   ; the cart, we can just write the result to GPU RAM and not spend any code
+   26                                   ; on comparing it - the console will do that for us. That really helped this fit.
+   27                                   
+   28                                   ; Be careful.. SMAC does NOT warn when a JR is out of range. Only got 15 words!
+   29                                   
+   30                                   ; from here we have 32 bytes until the DSP program blocks out
+   31                                   ENTRY:
+   32  00000000  xxxx                    JR gpumode							; skip over
+   33  00000002  E400                    nop
+   34                                    
+   35                                   SHARED:
+   36  00000004  980E04100080            movei #$800410,r14			; location of data
+   37  0000000A  A5CF                    load (r14),r15					; get start
+   38  0000000C  AC22                    load (r14+1),r2				; get count - offset is in longs
+   39  0000000E  AC48                    load (r14+2),r8				; get desired checksum + key
+   40                                   
+   41                                   chklp:
+   42  00000010  A5E4                    load (r15),r4					; get long
+   43  00000012  1822                    subq #1,r2							; count down
+   44  00000014  0C8F                    addqt #4,r15						; next address
+   45  00000016  D781                    jr NZ,chklp						; loop if not done on r2
+   46  00000018  1088                    sub r4,r8							; (delay) subtract value from checksum, result should be 0x3D0DEAD at end
+   47  0000001A  D0C0                    jump (r6)							; back to caller
+   48  0000001C  E400                    nop
+   49                                   ; 30/32
+   50                                   
+   51                                   ; have to break it up, cause the CD unit wipes the hash memory... GPU is okay though
+   52                                   gpumode:
+   53  0000001E  CC06                    move pc,r6							; set up for return
+   54  00000020  09C6                    addq #14,r6
+   55  00000022  980035B000F0            movei #SHARED,r0
+   56  00000028  D000                    jump (r0)
+
+
+                                        bootcode.s           Page 2       2:37:04 am 17-Sep-2016        SMAC 1.0.06 (Win32)
+
+
+   57  0000002A  E400                    nop
+   58                                    
+   59  0000002C  9801F00000FF            MOVEI #$00FFF000,R1		; AND mask for address
+   60  00000032  2426                    AND R1,R6							; mask out the relevant bits of PC
+   61                                    
+   62  00000034  8C03                    MOVEQ #0,R3						; Clear R3 for code below
+   63                                    
+   64  00000036  98020EEC0000            MOVEI #$00000EEC,R2		; Offset to chip control register
+   65  0000003C  BCC8                    STORE R8,(R6)					; write the code (checksum result, hopefully 3d0dead)
+   66  0000003E  1046                    SUB R2,R6							; Get control register (G_CTRL or D_CTRL)
+   67                                   
+   68                                   GAMEOVR:
+   69  00000040  D7E0                    JR GAMEOVR 						; wait for it to take effect
+   70  00000042  BCC3                    STORE R3,(R6)					; stop the GPU/DSP
+   71                                   ; 68
+   72                                   
+   73                                   ;	.org $f035f4	<-- doesn't work, we'll just pad then
+   74  00000044  54757273                dc.w $5475,$7273
+   75                                   
+   76                                   ; JagCD entry point 
+   77                                   ; should be at f035f4 (72/$48)
+   78                                   ; we should have 50 bytes here 
+   79                                   dspmode: 
+   80                                    ; There is a CD relocation at $4A that we can't touch, the MOVEI covers it
+   81  00000048  980956781234            MOVEI #$12345678,R9				; this movei is hacked by the CD boot
+   82                                    
+   83  0000004E  CC06                    MOVE PC,R6									; prepare for subroutine
+   84  00000050  09C6                    ADDQ #14,R6
+   85  00000052  9800B66800F1            MOVEI #SHARED+$180B8,R0		; prepare for long jump (DSP offset included)
+   86  00000058  D000                    JUMP (R0)									; go do it
+   87  0000005A  E400                    NOP												; delay slot
+   88                                    
+   89  0000005C  9801F00000FF            MOVEI #$00FFF000,R1				; AND mask for address
+   90  00000062  2426                    AND R1,R6									; mask out the relevant bits of PC
+   91                                    
+   92  00000064  8C03                    MOVEQ #0,R3								; Clear R3 for code below
+   93                                    
+   94  00000066  98020EEC0000            MOVEI #$00000EEC,R2				; Offset to chip control register
+   95  0000006C  BCC8                    STORE R8,(R6)							; write the code (checksum result, hopefully 3d0dead)
+   96  0000006E  1046                    SUB R2,R6									; Get control register (G_CTRL or D_CTRL)
+   97                                   
+   98                                   DGAMEOVR:
+   99  00000070  D7E0                    JR DGAMEOVR 								; wait for it to take effect
+  100  00000072  BCC3                    STORE R3,(R6)							; stop the GPU/DSP
+  101                                   ; 44/50
+  102                                   ; 116 total
+  103                                   
+  104                                    ; there's lots of empty space here... Tursi wuz here.
+  105                                    ; pad up to 130 bytes (even though the JagCD will hack some of them, see below)
+  106  00000074  54757273692077757A20    dc.w $5475,$7273,$6920,$7775,$7a20
+  107  0000007E  68657265                dc.w $6865,$7265
+  108                                   ; 130
+  109                                    
+  110                                   ; MOVEI #$0,R9							; this movei is hacked by the CD boot ($f03624) (120/$78)
+  111                                   ; MOVEI #$0,R10							; this movei is hacked by the CD boot ($f0362A) - this insn is split by the 130 byte mark
+  112                                    
+
+
+                                                             Page 3       2:37:04 am 17-Sep-2016        SMAC 1.0.06 (Win32)
+
+
+  113                                    END
+
+
+                                                             Page 4       2:37:04 am 17-Sep-2016        SMAC 1.0.06 (Win32)
+Symbol Table
+
+          DGAMEOVR 00F0361C  a 
+             ENTRY 00F035AC  a 
+           GAMEOVR 00F035EC  a 
+            SHARED 00F035B0  a 
+             chklp 00F035BC  a 
+           dspmode 00F035F4  a 
+           gpumode 00F035CA  a 
+
