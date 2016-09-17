@@ -1,0 +1,15 @@
+*.suo
+*.ncb
+*.vssscc
+*.scc
+*.user
+release/*
+debug/*
+*/Debug/*
+*/Release/*
+*/*.suo
+*/*.ncb
+*/*.vssscc
+*/*.scc
+*/*.user
+*.obj
