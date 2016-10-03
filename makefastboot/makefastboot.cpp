@@ -222,7 +222,7 @@ GAMEOVR2:
 
 	// todo: I only know for sure for 16-bit output, so this
 	// split question doesn't come up for the others right now
-	if ((width&0x18)==0x10) {
+	if ((width&0x06)==2) {
 		printf("Output swapped version for 16-bit EPROM? (Y/N) > ");
 		gets(buf);
 		if ((buf[0]=='y')||(buf[0]=='Y')) {
