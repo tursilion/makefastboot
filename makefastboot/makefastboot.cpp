@@ -220,6 +220,34 @@ GAMEOVR2:
 
 	printf("JagCD compatible - Successfully patched %s\n", argv[1]);
 
+	// todo: I only know for sure for 16-bit output, so this
+	// split question doesn't come up for the others right now
+	if ((width&0x18)==0x10) {
+		printf("Output swapped version for 16-bit EPROM? (Y/N) > ");
+		gets(buf);
+		if ((buf[0]=='y')||(buf[0]=='Y')) {
+			char fn[512];
+			strcpy(fn, argv[1]);
+			char *p=strrchr(fn, '.');
+			if (p) *p='\0';
+			strcat(fn,"_swapped.bin");
+
+			for (int idx=0; idx<sz; idx+=2) {
+				int c=bigbuf[idx];
+				bigbuf[idx]=bigbuf[idx+1];
+				bigbuf[idx+1]=c;
+			}
+
+			fp=fopen(fn, "wb");
+			if (NULL == fp) {
+				printf("Can't open file for writing.\n");
+				return -1;
+			}
+			fwrite(bigbuf, 1, sz, fp);
+			fclose(fp);
+		}
+	}
+
 	return 0;
 }
 
