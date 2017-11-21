@@ -172,8 +172,9 @@ GAMEOVR2:
 		default:	width = 4; break;
 	}
 	printf("\n");
-
-	printf("Set cartridge speed:\n  1:10 clocks (Default)\n  2: 8 clocks\n  3: 6 clocks\n  4: 5 clocks\n> ");
+	
+        // double check these times... I'm assuming 25MHz system clock
+	printf("Set cartridge speed:\n  1:10 clocks - 400nS (Default)\n  2: 8 clocks - 320 nS\n  3: 6 clocks - 240nS\n  4: 5 clocks - 200nS\n> ");
 	gets(buf);
 	switch(buf[0]) {
 		default:	width |= 0; break;
