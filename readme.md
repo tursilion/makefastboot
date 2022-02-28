@@ -5,4 +5,4 @@ Offered without warranty or support, but it works for me!!
 For a discussion of it, check out 
 http://tursilion.blogspot.com/2016/09/atari-jaguar-programming-causes-brain.html
 
-Shipped for Windows, should built under Linux as well.
+Shipped for Windows, should build under Linux as well.
